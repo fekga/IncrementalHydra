@@ -2,10 +2,10 @@ module Main exposing (main)
 
 import AnimationFrame
 import Html exposing (..)
+import Html.Attributes exposing (..)
 import Time exposing (Time)
-import Bootstrap.CDN
-import Bootstrap.Grid
-import Bootstrap.Progress
+import Bootstrap.CDN as CDN
+import Bootstrap.Grid as Grid
 
 
 main : Program Never Model Msg
@@ -119,44 +119,31 @@ initialFighters =
     ]
 
 
-view : Model -> Html a
+view : Model -> Html.Html a
 view model =
-    Bootstrap.Grid.container []
-        [ Bootstrap.CDN.stylesheet
-        , Bootstrap.Grid.row []
-            [ Bootstrap.Grid.col []
+    Grid.container []
+        [ CDN.stylesheet
+        , Grid.row []
+            [ Grid.col []
                 [ hydraView model.hydra
                 , fighterView model.fighters
                   --, eventView model.events
                 ]
+            , Grid.col [] []
+            , Grid.col [] []
             ]
         ]
 
 
-hydraView : Hydra -> Html a
+hydraView : Hydra -> Html.Html a
 hydraView hydra =
-    if hydra.body.current <= 0.0 then
-        deadHydraView
-    else
-        liveHydraView hydra
-
-
-deadHydraView : Html a
-deadHydraView =
-    div []
-        [ h1 [] [ text "The hydra is DEAD" ]
-        ]
-
-
-liveHydraView : Hydra -> Html a
-liveHydraView hydra =
-    div []
-        [ h1 [] [ text "The hydra is ALIVE" ]
+    Html.div []
+        [ Html.h1 [] [ Html.text "Hydra" ]
         , viewHydra hydra (List.head hydra.heads)
         ]
 
 
-viewHydra : Hydra -> Maybe Head -> Html a
+viewHydra : Hydra -> Maybe Head -> Html.Html a
 viewHydra hydra head =
     case head of
         Just head ->
@@ -166,30 +153,99 @@ viewHydra hydra head =
             viewHydraBody hydra.body
 
 
-viewHealth : Health -> Html a
+
+{-
+   progressStyle : Style
+   progressStyle =
+       Css.batch
+           [ Css.width (px 300)
+           , Css.height (px 30)
+           , backgroundColor (hex "#fff")
+           , Css.position Css.relative
+           ]
+
+
+   barStyle : Style
+   barStyle =
+       Css.batch
+           [ backgroundColor (hex "#0f0")
+           , Css.height (px 30)
+           , Css.color (hex "#fff")
+           ]
+
+
+   spanStyle : Style
+   spanStyle =
+       Css.batch
+           [ position absolute
+           , top (px 5)
+           , Css.zIndex (int 2)
+           , color (hex "#000")
+           , Css.textAlign center
+           , Css.width (pct 100)
+           ]
+-}
+
+
+viewHealth : Health -> Html.Html a
 viewHealth health =
-    div []
-        [ Bootstrap.Progress.progress
-            [ Bootstrap.Progress.height 15
-            , Bootstrap.Progress.label
-                (toString health.current
-                    ++ "/"
-                    ++ toString health.max
-                    ++ " (+"
-                    ++ toString health.regen
-                    ++ ")"
-                )
-            , Bootstrap.Progress.value (health.current / health.max * 100)
+    let
+        percentageHealth =
+            (health.current / health.max * 100.0)
+    in
+        Html.div
+            [ class "progress"
+            , style
+                [ ( "width", "100%" )
+                , ( "height", "30px" )
+                , ( "background-color", "#fff" )
+                , ( "position", "relative" )
+                , ( "border-width", "1px" )
+                , ( "border-color", "black" )
+                , ( "border-style", "solid" )
+                ]
             ]
-        ]
+            [ Html.div
+                [ class "bar"
+                , style
+                    [ ( "background-color", "#00b000" )
+                    , ( "height", "30px" )
+                    , ( "color", "#fff" )
+                    , ( "width", (toString percentageHealth) ++ "%" )
+                    , ( "border-width", "0px 1px 0px 0px" )
+                    , ( "border-color", "black" )
+                    , ( "border-style", "solid" )
+                    ]
+                ]
+                [ Html.span
+                    [ style
+                        [ ( "position", "absolute" )
+                        , ( "top", "5px" )
+                        , ( "z-index", "2" )
+                        , ( "color", "#000" )
+                        , ( "text-align", "center" )
+                        , ( "width", "100%" )
+                        ]
+                    ]
+                    [ Html.text
+                        (toString health.current
+                            ++ "/"
+                            ++ toString health.max
+                            ++ " (+"
+                            ++ toString health.regen
+                            ++ ")"
+                        )
+                    ]
+                ]
+            ]
 
 
-viewHydraBody : Health -> Html a
+viewHydraBody : Health -> Html.Html a
 viewHydraBody body =
-    p [] [ text "All heads are slain, it's body is vulnerable!", viewHealth body ]
+    Html.p [] [ Html.text "All heads are slain, it's body is vulnerable!", viewHealth body ]
 
 
-viewHydraHead : Hydra -> Head -> Html a
+viewHydraHead : Hydra -> Head -> Html.Html a
 viewHydraHead hydra head =
     case head of
         Regrowing _ ->
@@ -206,24 +262,24 @@ viewHydraHead hydra head =
                     else
                         "There is only one head left!"
             in
-                p []
-                    [ text headString
+                Html.p []
+                    [ Html.text headString
                     , viewHealth health
                     ]
 
 
-fighterView : List FighterGroup -> Html a
+fighterView : List FighterGroup -> Html.Html a
 fighterView fighters =
-    div []
-        [ p [] [ text "It is being attacked by the following brave fighters:" ]
-        , ul [] <| List.map viewFighterGroup fighters
+    Html.div []
+        [ Html.p [] [ Html.text "It is being attacked by the following brave fighters:" ]
+        , Html.ul [] <| List.map viewFighterGroup fighters
         ]
 
 
-viewFighterGroup : FighterGroup -> Html a
+viewFighterGroup : FighterGroup -> Html.Html a
 viewFighterGroup group =
-    li []
-        [ text <|
+    Html.li []
+        [ Html.text <|
             "A group of "
                 ++ toString group.tier
                 ++ " with a size of "
@@ -241,9 +297,9 @@ viewFighterGroup group =
 --         ]
 
 
-viewEvent : Event -> Html a
+viewEvent : Event -> Html.Html a
 viewEvent event =
-    li [] [ text <| toString event.tier ++ " has hit for " ++ toString event.damage ++ " damage" ]
+    Html.li [] [ Html.text <| toString event.tier ++ " has hit for " ++ toString event.damage ++ " damage" ]
 
 
 type Msg
@@ -334,8 +390,8 @@ takeDamageFrom fighters hydra =
 
 singleTargetDamage : FighterGroup -> Hydra -> Hydra
 singleTargetDamage fighter hydra =
-    { hydra
-        | heads =
+    let
+        heads =
             case hydra.heads of
                 firstHead :: rest ->
                     case fighter.status of
@@ -347,7 +403,36 @@ singleTargetDamage fighter hydra =
 
                 [] ->
                     hydra.heads
-    }
+
+        body =
+            case fighter.status of
+                ReadyToAttack _ ->
+                    case List.head hydra.heads of
+                        Just (Mature _) ->
+                            hydra.body
+
+                        _ ->
+                            attackBody fighter hydra
+
+                Reloading _ ->
+                    hydra.body
+    in
+        { hydra | heads = heads, body = body }
+
+
+attackBody : FighterGroup -> Hydra -> Health
+attackBody group hydra =
+    let
+        body =
+            hydra.body
+
+        remainingHp =
+            body.current - damageFor group
+
+        newBody =
+            { body | current = Basics.max 0.0 remainingHp }
+    in
+        newBody
 
 
 attackHead : FighterGroup -> Hydra -> Head -> List Head -> List Head
@@ -362,7 +447,7 @@ attackHead fighter hydra head rest =
                     health.current - damageFor fighter
 
                 newHealth =
-                    { health | current = remainingHp }
+                    { health | current = Basics.max 0.0 remainingHp }
             in
                 if remainingHp <= 0 then
                     (newHead hydra) ++ rest
