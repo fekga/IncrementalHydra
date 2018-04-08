@@ -3168,6 +3168,323 @@ var _elm_lang$core$Platform$Task = {ctor: 'Task'};
 var _elm_lang$core$Platform$ProcessId = {ctor: 'ProcessId'};
 var _elm_lang$core$Platform$Router = {ctor: 'Router'};
 
+var _cuducos$elm_format_number$FormatNumber_Locales$Locale = F5(
+	function (a, b, c, d, e) {
+		return {decimals: a, thousandSeparator: b, decimalSeparator: c, negativePrefix: d, negativeSuffix: e};
+	});
+var _cuducos$elm_format_number$FormatNumber_Locales$frenchLocale = A5(_cuducos$elm_format_number$FormatNumber_Locales$Locale, 3, ' ', ',', '−', '');
+var _cuducos$elm_format_number$FormatNumber_Locales$spanishLocale = A5(_cuducos$elm_format_number$FormatNumber_Locales$Locale, 3, '.', ',', '−', '');
+var _cuducos$elm_format_number$FormatNumber_Locales$usLocale = A5(_cuducos$elm_format_number$FormatNumber_Locales$Locale, 2, ',', '.', '−', '');
+
+var _myrho$elm_round$Round$funNum = F3(
+	function (fun, s, fl) {
+		return A2(
+			_elm_lang$core$Maybe$withDefault,
+			1 / 0,
+			_elm_lang$core$Result$toMaybe(
+				_elm_lang$core$String$toFloat(
+					A2(fun, s, fl))));
+	});
+var _myrho$elm_round$Round$splitComma = function (str) {
+	var _p0 = A2(_elm_lang$core$String$split, '.', str);
+	if (_p0.ctor === '::') {
+		if (_p0._1.ctor === '::') {
+			return {ctor: '_Tuple2', _0: _p0._0, _1: _p0._1._0};
+		} else {
+			return {ctor: '_Tuple2', _0: _p0._0, _1: '0'};
+		}
+	} else {
+		return {ctor: '_Tuple2', _0: '0', _1: '0'};
+	}
+};
+var _myrho$elm_round$Round$toDecimal = function (fl) {
+	var _p1 = A2(
+		_elm_lang$core$String$split,
+		'e',
+		_elm_lang$core$Basics$toString(fl));
+	if (_p1.ctor === '::') {
+		if (_p1._1.ctor === '::') {
+			var _p4 = _p1._1._0;
+			var _p2 = function () {
+				var hasSign = _elm_lang$core$Native_Utils.cmp(fl, 0) < 0;
+				var _p3 = _myrho$elm_round$Round$splitComma(_p1._0);
+				var b = _p3._0;
+				var a = _p3._1;
+				return {
+					ctor: '_Tuple3',
+					_0: hasSign ? '-' : '',
+					_1: hasSign ? A2(_elm_lang$core$String$dropLeft, 1, b) : b,
+					_2: a
+				};
+			}();
+			var sign = _p2._0;
+			var before = _p2._1;
+			var after = _p2._2;
+			var e = A2(
+				_elm_lang$core$Maybe$withDefault,
+				0,
+				_elm_lang$core$Result$toMaybe(
+					_elm_lang$core$String$toInt(
+						A2(_elm_lang$core$String$startsWith, '+', _p4) ? A2(_elm_lang$core$String$dropLeft, 1, _p4) : _p4)));
+			var newBefore = (_elm_lang$core$Native_Utils.cmp(e, 0) > -1) ? before : ((_elm_lang$core$Native_Utils.cmp(
+				_elm_lang$core$Basics$abs(e),
+				_elm_lang$core$String$length(before)) < 0) ? A2(
+				_elm_lang$core$Basics_ops['++'],
+				A2(
+					_elm_lang$core$String$left,
+					_elm_lang$core$String$length(before) - _elm_lang$core$Basics$abs(e),
+					before),
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					'.',
+					A2(
+						_elm_lang$core$String$right,
+						_elm_lang$core$Basics$abs(e),
+						before))) : A2(
+				_elm_lang$core$Basics_ops['++'],
+				'0.',
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					A2(
+						_elm_lang$core$String$repeat,
+						_elm_lang$core$Basics$abs(e) - _elm_lang$core$String$length(before),
+						'0'),
+					before)));
+			var newAfter = (_elm_lang$core$Native_Utils.cmp(e, 0) < 1) ? after : ((_elm_lang$core$Native_Utils.cmp(
+				e,
+				_elm_lang$core$String$length(after)) < 0) ? A2(
+				_elm_lang$core$Basics_ops['++'],
+				A2(_elm_lang$core$String$left, e, after),
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					'.',
+					A2(
+						_elm_lang$core$String$right,
+						_elm_lang$core$String$length(after) - e,
+						after))) : A2(
+				_elm_lang$core$Basics_ops['++'],
+				after,
+				A2(
+					_elm_lang$core$String$repeat,
+					e - _elm_lang$core$String$length(after),
+					'0')));
+			return A2(
+				_elm_lang$core$Basics_ops['++'],
+				sign,
+				A2(_elm_lang$core$Basics_ops['++'], newBefore, newAfter));
+		} else {
+			return _p1._0;
+		}
+	} else {
+		return '';
+	}
+};
+var _myrho$elm_round$Round$truncate = function (n) {
+	return (_elm_lang$core$Native_Utils.cmp(n, 0) < 0) ? _elm_lang$core$Basics$ceiling(n) : _elm_lang$core$Basics$floor(n);
+};
+var _myrho$elm_round$Round$roundFun = F3(
+	function (functor, s, fl) {
+		if (_elm_lang$core$Native_Utils.eq(s, 0)) {
+			return _elm_lang$core$Basics$toString(
+				functor(fl));
+		} else {
+			if (_elm_lang$core$Native_Utils.cmp(s, 0) < 0) {
+				return function (r) {
+					return (!_elm_lang$core$Native_Utils.eq(r, '0')) ? A2(
+						_elm_lang$core$Basics_ops['++'],
+						r,
+						A2(
+							_elm_lang$core$String$repeat,
+							_elm_lang$core$Basics$abs(s),
+							'0')) : r;
+				}(
+					A3(
+						_myrho$elm_round$Round$roundFun,
+						functor,
+						0,
+						A2(
+							F2(
+								function (x, y) {
+									return x / y;
+								}),
+							fl,
+							A2(
+								F2(
+									function (x, y) {
+										return Math.pow(x, y);
+									}),
+								10,
+								_elm_lang$core$Basics$abs(
+									_elm_lang$core$Basics$toFloat(s))))));
+			} else {
+				var dd = (_elm_lang$core$Native_Utils.cmp(fl, 0) < 0) ? 2 : 1;
+				var n = (_elm_lang$core$Native_Utils.cmp(fl, 0) < 0) ? -1 : 1;
+				var e = Math.pow(10, s);
+				var _p5 = _myrho$elm_round$Round$splitComma(
+					_myrho$elm_round$Round$toDecimal(fl));
+				var before = _p5._0;
+				var after = _p5._1;
+				var a = A3(
+					_elm_lang$core$String$padRight,
+					s + 1,
+					_elm_lang$core$Native_Utils.chr('0'),
+					after);
+				var b = A2(_elm_lang$core$String$left, s, a);
+				var c = A2(_elm_lang$core$String$dropLeft, s, a);
+				var f = functor(
+					A2(
+						_elm_lang$core$Maybe$withDefault,
+						_elm_lang$core$Basics$toFloat(e),
+						_elm_lang$core$Result$toMaybe(
+							_elm_lang$core$String$toFloat(
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									(_elm_lang$core$Native_Utils.cmp(fl, 0) < 0) ? '-' : '',
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										'1',
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											b,
+											A2(_elm_lang$core$Basics_ops['++'], '.', c))))))));
+				var g = A2(
+					_elm_lang$core$String$dropLeft,
+					dd,
+					_elm_lang$core$Basics$toString(f));
+				var h = _myrho$elm_round$Round$truncate(fl) + (_elm_lang$core$Native_Utils.eq(f - (e * n), e * n) ? ((_elm_lang$core$Native_Utils.cmp(fl, 0) < 0) ? -1 : 1) : 0);
+				var j = _elm_lang$core$Basics$toString(h);
+				var i = (_elm_lang$core$Native_Utils.eq(j, '0') && ((!_elm_lang$core$Native_Utils.eq(f - (e * n), 0)) && ((_elm_lang$core$Native_Utils.cmp(fl, 0) < 0) && (_elm_lang$core$Native_Utils.cmp(fl, -1) > 0)))) ? A2(_elm_lang$core$Basics_ops['++'], '-', j) : j;
+				return A2(
+					_elm_lang$core$Basics_ops['++'],
+					i,
+					A2(_elm_lang$core$Basics_ops['++'], '.', g));
+			}
+		}
+	});
+var _myrho$elm_round$Round$round = _myrho$elm_round$Round$roundFun(_elm_lang$core$Basics$round);
+var _myrho$elm_round$Round$roundNum = _myrho$elm_round$Round$funNum(_myrho$elm_round$Round$round);
+var _myrho$elm_round$Round$ceiling = _myrho$elm_round$Round$roundFun(_elm_lang$core$Basics$ceiling);
+var _myrho$elm_round$Round$ceilingNum = _myrho$elm_round$Round$funNum(_myrho$elm_round$Round$ceiling);
+var _myrho$elm_round$Round$floor = _myrho$elm_round$Round$roundFun(_elm_lang$core$Basics$floor);
+var _myrho$elm_round$Round$floorCom = F2(
+	function (s, fl) {
+		return (_elm_lang$core$Native_Utils.cmp(fl, 0) < 0) ? A2(_myrho$elm_round$Round$ceiling, s, fl) : A2(_myrho$elm_round$Round$floor, s, fl);
+	});
+var _myrho$elm_round$Round$floorNumCom = _myrho$elm_round$Round$funNum(_myrho$elm_round$Round$floorCom);
+var _myrho$elm_round$Round$ceilingCom = F2(
+	function (s, fl) {
+		return (_elm_lang$core$Native_Utils.cmp(fl, 0) < 0) ? A2(_myrho$elm_round$Round$floor, s, fl) : A2(_myrho$elm_round$Round$ceiling, s, fl);
+	});
+var _myrho$elm_round$Round$ceilingNumCom = _myrho$elm_round$Round$funNum(_myrho$elm_round$Round$ceilingCom);
+var _myrho$elm_round$Round$floorNum = _myrho$elm_round$Round$funNum(_myrho$elm_round$Round$floor);
+var _myrho$elm_round$Round$roundCom = _myrho$elm_round$Round$roundFun(
+	function (fl) {
+		var dec = fl - _elm_lang$core$Basics$toFloat(
+			_myrho$elm_round$Round$truncate(fl));
+		return (_elm_lang$core$Native_Utils.cmp(dec, 0.5) > -1) ? _elm_lang$core$Basics$ceiling(fl) : ((_elm_lang$core$Native_Utils.cmp(dec, -0.5) < 1) ? _elm_lang$core$Basics$floor(fl) : _elm_lang$core$Basics$round(fl));
+	});
+var _myrho$elm_round$Round$roundNumCom = _myrho$elm_round$Round$funNum(_myrho$elm_round$Round$roundCom);
+
+var _cuducos$elm_format_number$Helpers$stringfy = function (formatted) {
+	var decimals = function () {
+		var _p0 = formatted.decimals;
+		if (_p0.ctor === 'Just') {
+			return A2(_elm_lang$core$Basics_ops['++'], formatted.locale.decimalSeparator, _p0._0);
+		} else {
+			return '';
+		}
+	}();
+	return _elm_lang$core$String$concat(
+		{
+			ctor: '::',
+			_0: A2(_elm_lang$core$Maybe$withDefault, '', formatted.negativePrefix),
+			_1: {
+				ctor: '::',
+				_0: A2(_elm_lang$core$String$join, formatted.locale.thousandSeparator, formatted.integers),
+				_1: {
+					ctor: '::',
+					_0: decimals,
+					_1: {
+						ctor: '::',
+						_0: A2(_elm_lang$core$Maybe$withDefault, '', formatted.negativeSuffix),
+						_1: {ctor: '[]'}
+					}
+				}
+			}
+		});
+};
+var _cuducos$elm_format_number$Helpers$splitThousands = function (integers) {
+	var reversedSplitThousands = function (value) {
+		return (_elm_lang$core$Native_Utils.cmp(
+			_elm_lang$core$String$length(value),
+			3) > 0) ? A2(
+			F2(
+				function (x, y) {
+					return {ctor: '::', _0: x, _1: y};
+				}),
+			A2(_elm_lang$core$String$right, 3, value),
+			reversedSplitThousands(
+				A2(_elm_lang$core$String$dropRight, 3, value))) : {
+			ctor: '::',
+			_0: value,
+			_1: {ctor: '[]'}
+		};
+	};
+	return _elm_lang$core$List$reverse(
+		reversedSplitThousands(integers));
+};
+var _cuducos$elm_format_number$Helpers$isNegative = function (formatted) {
+	var onlyZeros = A2(
+		_elm_lang$core$String$all,
+		function ($char) {
+			return _elm_lang$core$Native_Utils.eq(
+				$char,
+				_elm_lang$core$Native_Utils.chr('0'));
+		},
+		_elm_lang$core$String$concat(
+			A2(
+				_elm_lang$core$List$append,
+				formatted.integers,
+				_elm_lang$core$List$singleton(
+					A2(_elm_lang$core$Maybe$withDefault, '', formatted.decimals)))));
+	var isPositive = _elm_lang$core$Native_Utils.cmp(formatted.original, 0) > -1;
+	return !(isPositive || onlyZeros);
+};
+var _cuducos$elm_format_number$Helpers$FormattedNumber = F6(
+	function (a, b, c, d, e, f) {
+		return {locale: a, original: b, integers: c, decimals: d, negativePrefix: e, negativeSuffix: f};
+	});
+var _cuducos$elm_format_number$Helpers$parse = F2(
+	function (locale, original) {
+		var parts = A2(
+			_elm_lang$core$String$split,
+			'.',
+			A2(_myrho$elm_round$Round$round, locale.decimals, original));
+		var integers = _cuducos$elm_format_number$Helpers$splitThousands(
+			A2(
+				_elm_lang$core$String$filter,
+				_elm_lang$core$Char$isDigit,
+				A2(
+					_elm_lang$core$Maybe$withDefault,
+					'0',
+					_elm_lang$core$List$head(parts))));
+		var decimals = _elm_lang$core$List$head(
+			A2(_elm_lang$core$List$drop, 1, parts));
+		var partial = A6(_cuducos$elm_format_number$Helpers$FormattedNumber, locale, original, integers, decimals, _elm_lang$core$Maybe$Nothing, _elm_lang$core$Maybe$Nothing);
+		return _cuducos$elm_format_number$Helpers$isNegative(partial) ? _elm_lang$core$Native_Utils.update(
+			partial,
+			{
+				negativePrefix: _elm_lang$core$Maybe$Just(locale.negativePrefix),
+				negativeSuffix: _elm_lang$core$Maybe$Just(locale.negativeSuffix)
+			}) : partial;
+	});
+
+var _cuducos$elm_format_number$FormatNumber$format = F2(
+	function (locale, num) {
+		return _cuducos$elm_format_number$Helpers$stringfy(
+			A2(_cuducos$elm_format_number$Helpers$parse, locale, num));
+	});
+
 //import Native.List //
 
 var _elm_lang$core$Native_Array = function() {
@@ -10093,33 +10410,6 @@ var _rundis$elm_bootstrap$Bootstrap_ListGroup$ul = function (items) {
 		A2(_elm_lang$core$List$map, _rundis$elm_bootstrap$Bootstrap_Internal_ListGroup$renderItem, items));
 };
 
-var _rundis$elm_bootstrap$Bootstrap_CDN$fontAwesome = A3(
-	_elm_lang$html$Html$node,
-	'link',
-	{
-		ctor: '::',
-		_0: _elm_lang$html$Html_Attributes$rel('stylesheet'),
-		_1: {
-			ctor: '::',
-			_0: _elm_lang$html$Html_Attributes$href('https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css'),
-			_1: {ctor: '[]'}
-		}
-	},
-	{ctor: '[]'});
-var _rundis$elm_bootstrap$Bootstrap_CDN$stylesheet = A3(
-	_elm_lang$html$Html$node,
-	'link',
-	{
-		ctor: '::',
-		_0: _elm_lang$html$Html_Attributes$rel('stylesheet'),
-		_1: {
-			ctor: '::',
-			_0: _elm_lang$html$Html_Attributes$href('https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css'),
-			_1: {ctor: '[]'}
-		}
-	},
-	{ctor: '[]'});
-
 var _rundis$elm_bootstrap$Bootstrap_Grid_Row$betweenXl = A2(_rundis$elm_bootstrap$Bootstrap_Grid_Internal$rowHAlign, _rundis$elm_bootstrap$Bootstrap_Grid_Internal$XL, _rundis$elm_bootstrap$Bootstrap_Grid_Internal$Between);
 var _rundis$elm_bootstrap$Bootstrap_Grid_Row$betweenLg = A2(_rundis$elm_bootstrap$Bootstrap_Grid_Internal$rowHAlign, _rundis$elm_bootstrap$Bootstrap_Grid_Internal$LG, _rundis$elm_bootstrap$Bootstrap_Grid_Internal$Between);
 var _rundis$elm_bootstrap$Bootstrap_Grid_Row$betweenMd = A2(_rundis$elm_bootstrap$Bootstrap_Grid_Internal$rowHAlign, _rundis$elm_bootstrap$Bootstrap_Grid_Internal$MD, _rundis$elm_bootstrap$Bootstrap_Grid_Internal$Between);
@@ -10553,12 +10843,291 @@ var _rundis$elm_bootstrap$Bootstrap_Grid$col = F2(
 			{options: options, children: children});
 	});
 
+var _rundis$elm_bootstrap$Bootstrap_Progress$roleClass = function (role) {
+	return _elm_lang$html$Html_Attributes$class(
+		function () {
+			var _p0 = role;
+			switch (_p0.ctor) {
+				case 'Success':
+					return 'bg-success';
+				case 'Info':
+					return 'bg-info';
+				case 'Warning':
+					return 'bg-warning';
+				default:
+					return 'bg-danger';
+			}
+		}());
+};
+var _rundis$elm_bootstrap$Bootstrap_Progress$toAttributes = function (_p1) {
+	var _p2 = _p1;
+	var _p5 = _p2._0;
+	return _elm_lang$core$List$concat(
+		{
+			ctor: '::',
+			_0: {
+				ctor: '::',
+				_0: A2(_elm_lang$html$Html_Attributes$attribute, 'role', 'progressbar'),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html_Attributes$attribute,
+						'aria-value-now',
+						_elm_lang$core$Basics$toString(_p5.value)),
+					_1: {
+						ctor: '::',
+						_0: A2(_elm_lang$html$Html_Attributes$attribute, 'aria-valuemin', '0'),
+						_1: {
+							ctor: '::',
+							_0: A2(_elm_lang$html$Html_Attributes$attribute, 'aria-valuemax', '100'),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$style(
+									{
+										ctor: '::',
+										_0: {
+											ctor: '_Tuple2',
+											_0: 'width',
+											_1: A2(
+												_elm_lang$core$Basics_ops['++'],
+												_elm_lang$core$Basics$toString(_p5.value),
+												'%')
+										},
+										_1: {ctor: '[]'}
+									}),
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$classList(
+										{
+											ctor: '::',
+											_0: {ctor: '_Tuple2', _0: 'progress-bar', _1: true},
+											_1: {
+												ctor: '::',
+												_0: {ctor: '_Tuple2', _0: 'progress-bar-striped', _1: _p5.striped || _p5.animated},
+												_1: {
+													ctor: '::',
+													_0: {ctor: '_Tuple2', _0: 'progress-bar-animated', _1: _p5.animated},
+													_1: {ctor: '[]'}
+												}
+											}
+										}),
+									_1: {ctor: '[]'}
+								}
+							}
+						}
+					}
+				}
+			},
+			_1: {
+				ctor: '::',
+				_0: function () {
+					var _p3 = _p5.height;
+					if (_p3.ctor === 'Just') {
+						return {
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$style(
+								{
+									ctor: '::',
+									_0: {
+										ctor: '_Tuple2',
+										_0: 'height',
+										_1: A2(
+											_elm_lang$core$Basics_ops['++'],
+											_elm_lang$core$Basics$toString(_p3._0),
+											'px')
+									},
+									_1: {ctor: '[]'}
+								}),
+							_1: {ctor: '[]'}
+						};
+					} else {
+						return {ctor: '[]'};
+					}
+				}(),
+				_1: {
+					ctor: '::',
+					_0: function () {
+						var _p4 = _p5.role;
+						if (_p4.ctor === 'Just') {
+							return {
+								ctor: '::',
+								_0: _rundis$elm_bootstrap$Bootstrap_Progress$roleClass(_p4._0),
+								_1: {ctor: '[]'}
+							};
+						} else {
+							return {ctor: '[]'};
+						}
+					}(),
+					_1: {
+						ctor: '::',
+						_0: _p5.attributes,
+						_1: {ctor: '[]'}
+					}
+				}
+			}
+		});
+};
+var _rundis$elm_bootstrap$Bootstrap_Progress$WrapperAttrs = function (a) {
+	return {ctor: 'WrapperAttrs', _0: a};
+};
+var _rundis$elm_bootstrap$Bootstrap_Progress$wrapperAttrs = function (attrs) {
+	return _rundis$elm_bootstrap$Bootstrap_Progress$WrapperAttrs(attrs);
+};
+var _rundis$elm_bootstrap$Bootstrap_Progress$Attrs = function (a) {
+	return {ctor: 'Attrs', _0: a};
+};
+var _rundis$elm_bootstrap$Bootstrap_Progress$attrs = function (attrs) {
+	return _rundis$elm_bootstrap$Bootstrap_Progress$Attrs(attrs);
+};
+var _rundis$elm_bootstrap$Bootstrap_Progress$Animated = function (a) {
+	return {ctor: 'Animated', _0: a};
+};
+var _rundis$elm_bootstrap$Bootstrap_Progress$animated = _rundis$elm_bootstrap$Bootstrap_Progress$Animated(true);
+var _rundis$elm_bootstrap$Bootstrap_Progress$Striped = function (a) {
+	return {ctor: 'Striped', _0: a};
+};
+var _rundis$elm_bootstrap$Bootstrap_Progress$striped = _rundis$elm_bootstrap$Bootstrap_Progress$Striped(true);
+var _rundis$elm_bootstrap$Bootstrap_Progress$Roled = function (a) {
+	return {ctor: 'Roled', _0: a};
+};
+var _rundis$elm_bootstrap$Bootstrap_Progress$Label = function (a) {
+	return {ctor: 'Label', _0: a};
+};
+var _rundis$elm_bootstrap$Bootstrap_Progress$label = function (text) {
+	return _rundis$elm_bootstrap$Bootstrap_Progress$Label(
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html$text(text),
+			_1: {ctor: '[]'}
+		});
+};
+var _rundis$elm_bootstrap$Bootstrap_Progress$customLabel = function (children) {
+	return _rundis$elm_bootstrap$Bootstrap_Progress$Label(children);
+};
+var _rundis$elm_bootstrap$Bootstrap_Progress$Height = function (a) {
+	return {ctor: 'Height', _0: a};
+};
+var _rundis$elm_bootstrap$Bootstrap_Progress$height = function (height) {
+	return _rundis$elm_bootstrap$Bootstrap_Progress$Height(
+		_elm_lang$core$Maybe$Just(height));
+};
+var _rundis$elm_bootstrap$Bootstrap_Progress$Value = function (a) {
+	return {ctor: 'Value', _0: a};
+};
+var _rundis$elm_bootstrap$Bootstrap_Progress$value = function (val) {
+	return _rundis$elm_bootstrap$Bootstrap_Progress$Value(val);
+};
+var _rundis$elm_bootstrap$Bootstrap_Progress$Danger = {ctor: 'Danger'};
+var _rundis$elm_bootstrap$Bootstrap_Progress$danger = _rundis$elm_bootstrap$Bootstrap_Progress$Roled(
+	_elm_lang$core$Maybe$Just(_rundis$elm_bootstrap$Bootstrap_Progress$Danger));
+var _rundis$elm_bootstrap$Bootstrap_Progress$Warning = {ctor: 'Warning'};
+var _rundis$elm_bootstrap$Bootstrap_Progress$warning = _rundis$elm_bootstrap$Bootstrap_Progress$Roled(
+	_elm_lang$core$Maybe$Just(_rundis$elm_bootstrap$Bootstrap_Progress$Warning));
+var _rundis$elm_bootstrap$Bootstrap_Progress$Info = {ctor: 'Info'};
+var _rundis$elm_bootstrap$Bootstrap_Progress$info = _rundis$elm_bootstrap$Bootstrap_Progress$Roled(
+	_elm_lang$core$Maybe$Just(_rundis$elm_bootstrap$Bootstrap_Progress$Info));
+var _rundis$elm_bootstrap$Bootstrap_Progress$Success = {ctor: 'Success'};
+var _rundis$elm_bootstrap$Bootstrap_Progress$success = _rundis$elm_bootstrap$Bootstrap_Progress$Roled(
+	_elm_lang$core$Maybe$Just(_rundis$elm_bootstrap$Bootstrap_Progress$Success));
+var _rundis$elm_bootstrap$Bootstrap_Progress$Options = function (a) {
+	return {ctor: 'Options', _0: a};
+};
+var _rundis$elm_bootstrap$Bootstrap_Progress$applyOption = F2(
+	function (modifier, _p6) {
+		var _p7 = _p6;
+		var _p9 = _p7._0;
+		return _rundis$elm_bootstrap$Bootstrap_Progress$Options(
+			function () {
+				var _p8 = modifier;
+				switch (_p8.ctor) {
+					case 'Value':
+						return _elm_lang$core$Native_Utils.update(
+							_p9,
+							{value: _p8._0});
+					case 'Height':
+						return _elm_lang$core$Native_Utils.update(
+							_p9,
+							{height: _p8._0});
+					case 'Label':
+						return _elm_lang$core$Native_Utils.update(
+							_p9,
+							{label: _p8._0});
+					case 'Roled':
+						return _elm_lang$core$Native_Utils.update(
+							_p9,
+							{role: _p8._0});
+					case 'Striped':
+						return _elm_lang$core$Native_Utils.update(
+							_p9,
+							{striped: _p8._0});
+					case 'Animated':
+						return _elm_lang$core$Native_Utils.update(
+							_p9,
+							{animated: _p8._0});
+					case 'Attrs':
+						return _elm_lang$core$Native_Utils.update(
+							_p9,
+							{attributes: _p8._0});
+					default:
+						return _elm_lang$core$Native_Utils.update(
+							_p9,
+							{wrapperAttributes: _p8._0});
+				}
+			}());
+	});
+var _rundis$elm_bootstrap$Bootstrap_Progress$defaultOptions = _rundis$elm_bootstrap$Bootstrap_Progress$Options(
+	{
+		value: 0,
+		height: _elm_lang$core$Maybe$Nothing,
+		label: {ctor: '[]'},
+		role: _elm_lang$core$Maybe$Nothing,
+		striped: false,
+		animated: false,
+		attributes: {ctor: '[]'},
+		wrapperAttributes: {ctor: '[]'}
+	});
+var _rundis$elm_bootstrap$Bootstrap_Progress$renderBar = function (modifiers) {
+	var _p10 = A3(_elm_lang$core$List$foldl, _rundis$elm_bootstrap$Bootstrap_Progress$applyOption, _rundis$elm_bootstrap$Bootstrap_Progress$defaultOptions, modifiers);
+	var options = _p10;
+	var opts = _p10._0;
+	return A2(
+		_elm_lang$html$Html$div,
+		_rundis$elm_bootstrap$Bootstrap_Progress$toAttributes(options),
+		opts.label);
+};
+var _rundis$elm_bootstrap$Bootstrap_Progress$progress = function (modifiers) {
+	var _p11 = A3(_elm_lang$core$List$foldl, _rundis$elm_bootstrap$Bootstrap_Progress$applyOption, _rundis$elm_bootstrap$Bootstrap_Progress$defaultOptions, modifiers);
+	var options = _p11._0;
+	return A2(
+		_elm_lang$html$Html$div,
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html_Attributes$class('progress'),
+			_1: options.wrapperAttributes
+		},
+		{
+			ctor: '::',
+			_0: _rundis$elm_bootstrap$Bootstrap_Progress$renderBar(modifiers),
+			_1: {ctor: '[]'}
+		});
+};
+var _rundis$elm_bootstrap$Bootstrap_Progress$progressMulti = function (bars) {
+	return A2(
+		_elm_lang$html$Html$div,
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html_Attributes$class('progress'),
+			_1: {ctor: '[]'}
+		},
+		A2(_elm_lang$core$List$map, _rundis$elm_bootstrap$Bootstrap_Progress$renderBar, bars));
+};
+
 var _user$project$Main$damageFor = function (group) {
 	var tierDamage = function () {
 		var _p0 = group.tier;
 		switch (_p0.ctor) {
 			case 'Villager':
-				return 1.0;
+				return 1.5;
 			case 'Footman':
 				return 2.0;
 			case 'Archer':
@@ -10593,9 +11162,13 @@ var _user$project$Main$reloadTimeFor = function (fighter) {
 			return _elm_lang$core$Time$millisecond * 2000;
 	}
 };
-var _user$project$Main$processRegens = F2(
-	function (diff, model) {
-		return model;
+var _user$project$Main$regenHealth = F2(
+	function (diff, health) {
+		return _elm_lang$core$Native_Utils.update(
+			health,
+			{
+				current: A3(_elm_lang$core$Basics$clamp, 0, health.max, health.current + ((diff * health.regen) / 1000.0))
+			});
 	});
 var _user$project$Main$viewFighterGroup = function (group) {
 	return A2(
@@ -10609,7 +11182,7 @@ var _user$project$Main$viewFighterGroup = function (group) {
 					_elm_lang$core$Basics$toString(group.tier),
 					A2(
 						_elm_lang$core$Basics_ops['++'],
-						' with a size of ',
+						' : ',
 						_elm_lang$core$Basics$toString(group.size)))),
 			_1: {ctor: '[]'}
 		});
@@ -10648,27 +11221,23 @@ var _user$project$Main$viewProgressBar = F3(
 					_0: _elm_lang$html$Html_Attributes$style(
 						{
 							ctor: '::',
-							_0: {ctor: '_Tuple2', _0: 'width', _1: '100%'},
+							_0: {ctor: '_Tuple2', _0: 'height', _1: '30px'},
 							_1: {
 								ctor: '::',
-								_0: {ctor: '_Tuple2', _0: 'height', _1: '30px'},
+								_0: {ctor: '_Tuple2', _0: 'background-color', _1: '#fff'},
 								_1: {
 									ctor: '::',
-									_0: {ctor: '_Tuple2', _0: 'background-color', _1: '#fff'},
+									_0: {ctor: '_Tuple2', _0: 'position', _1: 'relative'},
 									_1: {
 										ctor: '::',
-										_0: {ctor: '_Tuple2', _0: 'position', _1: 'relative'},
+										_0: {ctor: '_Tuple2', _0: 'border-width', _1: '1px'},
 										_1: {
 											ctor: '::',
-											_0: {ctor: '_Tuple2', _0: 'border-width', _1: '1px'},
+											_0: {ctor: '_Tuple2', _0: 'border-color', _1: 'black'},
 											_1: {
 												ctor: '::',
-												_0: {ctor: '_Tuple2', _0: 'border-color', _1: 'black'},
-												_1: {
-													ctor: '::',
-													_0: {ctor: '_Tuple2', _0: 'border-style', _1: 'solid'},
-													_1: {ctor: '[]'}
-												}
+												_0: {ctor: '_Tuple2', _0: 'border-style', _1: 'solid'},
+												_1: {ctor: '[]'}
 											}
 										}
 									}
@@ -10768,22 +11337,25 @@ var _user$project$Main$viewProgressBar = F3(
 				_1: {ctor: '[]'}
 			});
 	});
+var _user$project$Main$healthLocale = _elm_lang$core$Native_Utils.update(
+	_cuducos$elm_format_number$FormatNumber_Locales$usLocale,
+	{decimals: 3});
 var _user$project$Main$viewHealth = function (health) {
 	var progressLabel = A2(
 		_elm_lang$core$Basics_ops['++'],
-		_elm_lang$core$Basics$toString(health.current),
+		A2(_cuducos$elm_format_number$FormatNumber$format, _user$project$Main$healthLocale, health.current),
 		A2(
 			_elm_lang$core$Basics_ops['++'],
 			'/',
 			A2(
 				_elm_lang$core$Basics_ops['++'],
-				_elm_lang$core$Basics$toString(health.max),
+				A2(_cuducos$elm_format_number$FormatNumber$format, _user$project$Main$healthLocale, health.max),
 				A2(
 					_elm_lang$core$Basics_ops['++'],
 					' (+',
 					A2(
 						_elm_lang$core$Basics_ops['++'],
-						_elm_lang$core$Basics$toString(health.regen),
+						A2(_cuducos$elm_format_number$FormatNumber$format, _user$project$Main$healthLocale, health.regen),
 						')')))));
 	var progressPercentage = _elm_lang$core$Basics$toString((health.current / health.max) * 100.0);
 	return A3(_user$project$Main$viewProgressBar, progressPercentage, progressLabel, '#00b000');
@@ -10804,44 +11376,43 @@ var _user$project$Main$viewHydraBody = function (body) {
 };
 var _user$project$Main$viewHydraHead = F2(
 	function (hydra, head) {
-		var _p2 = head;
-		if (_p2.ctor === 'Regrowing') {
-			return A2(
-				_elm_lang$html$Html$p,
-				{ctor: '[]'},
-				{ctor: '[]'});
-		} else {
-			var headCount = _elm_lang$core$List$length(hydra.heads) - 1;
-			var headString = (_elm_lang$core$Native_Utils.cmp(headCount, 1) > 0) ? A2(
-				_elm_lang$core$Basics_ops['++'],
-				'The hydra has  ',
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					_elm_lang$core$Basics$toString(headCount),
-					' more heads.')) : (_elm_lang$core$Native_Utils.eq(headCount, 1) ? A2(
-				_elm_lang$core$Basics_ops['++'],
-				'The hydra has  ',
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					_elm_lang$core$Basics$toString(headCount),
-					' more head.')) : 'There is only one head left!');
-			return A2(
-				_elm_lang$html$Html$p,
-				{ctor: '[]'},
-				{
-					ctor: '::',
-					_0: _elm_lang$html$Html$text('Current head:'),
-					_1: {
+		return A2(
+			_elm_lang$html$Html$p,
+			{ctor: '[]'},
+			function () {
+				var _p2 = head;
+				if (_p2.ctor === 'Regrowing') {
+					return {ctor: '[]'};
+				} else {
+					var headCount = _elm_lang$core$List$length(hydra.heads) - 1;
+					var headString = (_elm_lang$core$Native_Utils.cmp(headCount, 1) > 0) ? A2(
+						_elm_lang$core$Basics_ops['++'],
+						'The hydra has  ',
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							_elm_lang$core$Basics$toString(headCount),
+							' more heads.')) : (_elm_lang$core$Native_Utils.eq(headCount, 1) ? A2(
+						_elm_lang$core$Basics_ops['++'],
+						'The hydra has  ',
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							_elm_lang$core$Basics$toString(headCount),
+							' more head.')) : 'There is only one head left!');
+					return {
 						ctor: '::',
-						_0: _user$project$Main$viewHealth(_p2._0),
+						_0: _elm_lang$html$Html$text('Current head:'),
 						_1: {
 							ctor: '::',
-							_0: _elm_lang$html$Html$text(headString),
-							_1: {ctor: '[]'}
+							_0: _user$project$Main$viewHealth(_p2._0),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$html$Html$text(headString),
+								_1: {ctor: '[]'}
+							}
 						}
-					}
-				});
-		}
+					};
+				}
+			}());
 	});
 var _user$project$Main$viewHydra = F2(
 	function (hydra, head) {
@@ -10870,7 +11441,7 @@ var _user$project$Main$hydraView = function (hydra) {
 		{
 			ctor: '::',
 			_0: A2(
-				_elm_lang$html$Html$h1,
+				_elm_lang$html$Html$h2,
 				{ctor: '[]'},
 				{
 					ctor: '::',
@@ -10889,48 +11460,56 @@ var _user$project$Main$hydraView = function (hydra) {
 };
 var _user$project$Main$view = function (model) {
 	return A2(
-		_rundis$elm_bootstrap$Bootstrap_Grid$container,
+		_rundis$elm_bootstrap$Bootstrap_Grid$containerFluid,
 		{ctor: '[]'},
 		{
 			ctor: '::',
-			_0: _rundis$elm_bootstrap$Bootstrap_CDN$stylesheet,
-			_1: {
-				ctor: '::',
-				_0: A2(
-					_rundis$elm_bootstrap$Bootstrap_Grid$row,
-					{ctor: '[]'},
-					{
+			_0: A2(
+				_rundis$elm_bootstrap$Bootstrap_Grid$row,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: A2(
+						_rundis$elm_bootstrap$Bootstrap_Grid$col,
+						{
+							ctor: '::',
+							_0: _rundis$elm_bootstrap$Bootstrap_Grid_Col$md4,
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: _user$project$Main$hydraView(model.hydra),
+							_1: {
+								ctor: '::',
+								_0: _user$project$Main$fighterView(model.fighters),
+								_1: {ctor: '[]'}
+							}
+						}),
+					_1: {
 						ctor: '::',
 						_0: A2(
 							_rundis$elm_bootstrap$Bootstrap_Grid$col,
-							{ctor: '[]'},
 							{
 								ctor: '::',
-								_0: _user$project$Main$hydraView(model.hydra),
-								_1: {
-									ctor: '::',
-									_0: _user$project$Main$fighterView(model.fighters),
-									_1: {ctor: '[]'}
-								}
-							}),
+								_0: _rundis$elm_bootstrap$Bootstrap_Grid_Col$md4,
+								_1: {ctor: '[]'}
+							},
+							{ctor: '[]'}),
 						_1: {
 							ctor: '::',
 							_0: A2(
 								_rundis$elm_bootstrap$Bootstrap_Grid$col,
-								{ctor: '[]'},
+								{
+									ctor: '::',
+									_0: _rundis$elm_bootstrap$Bootstrap_Grid_Col$md4,
+									_1: {ctor: '[]'}
+								},
 								{ctor: '[]'}),
-							_1: {
-								ctor: '::',
-								_0: A2(
-									_rundis$elm_bootstrap$Bootstrap_Grid$col,
-									{ctor: '[]'},
-									{ctor: '[]'}),
-								_1: {ctor: '[]'}
-							}
+							_1: {ctor: '[]'}
 						}
-					}),
-				_1: {ctor: '[]'}
-			}
+					}
+				}),
+			_1: {ctor: '[]'}
 		});
 };
 var _user$project$Main$Model = F3(
@@ -10970,6 +11549,33 @@ var _user$project$Main$generateHydra = function (level) {
 	var hydra = A3(_user$project$Main$Hydra, heads, body, level);
 	return hydra;
 };
+var _user$project$Main$regenHead = F2(
+	function (diff, head) {
+		var _p4 = head;
+		if (_p4.ctor === 'Mature') {
+			return _user$project$Main$Mature(
+				A2(_user$project$Main$regenHealth, diff, _p4._0));
+		} else {
+			return head;
+		}
+	});
+var _user$project$Main$regenHydra = F2(
+	function (diff, hydra) {
+		var headRegen = _user$project$Main$regenHead(diff);
+		var newHeads = A2(_elm_lang$core$List$map, headRegen, hydra.heads);
+		var newBody = A2(_user$project$Main$regenHealth, diff, hydra.body);
+		return _elm_lang$core$Native_Utils.update(
+			hydra,
+			{body: newBody, heads: newHeads});
+	});
+var _user$project$Main$processRegens = F2(
+	function (diff, model) {
+		return _elm_lang$core$Native_Utils.update(
+			model,
+			{
+				hydra: A2(_user$project$Main$regenHydra, diff, model.hydra)
+			});
+	});
 var _user$project$Main$Regrowing = function (a) {
 	return {ctor: 'Regrowing', _0: a};
 };
@@ -10982,14 +11588,14 @@ var _user$project$Main$newHead = function (hydra) {
 };
 var _user$project$Main$attackHead = F4(
 	function (fighter, hydra, head, rest) {
-		var _p4 = head;
-		if (_p4.ctor === 'Regrowing') {
+		var _p5 = head;
+		if (_p5.ctor === 'Regrowing') {
 			return {ctor: '::', _0: head, _1: rest};
 		} else {
-			var _p5 = _p4._0;
-			var remainingHp = _p5.current - _user$project$Main$damageFor(fighter);
+			var _p6 = _p5._0;
+			var remainingHp = _p6.current - _user$project$Main$damageFor(fighter);
 			var newHealth = _elm_lang$core$Native_Utils.update(
-				_p5,
+				_p6,
 				{
 					current: A2(_elm_lang$core$Basics$max, 0.0, remainingHp)
 				});
@@ -11006,10 +11612,10 @@ var _user$project$Main$attackHead = F4(
 var _user$project$Main$singleTargetDamage = F2(
 	function (fighter, hydra) {
 		var body = function () {
-			var _p6 = fighter.status;
-			if (_p6.ctor === 'ReadyToAttack') {
-				var _p7 = _elm_lang$core$List$head(hydra.heads);
-				if ((_p7.ctor === 'Just') && (_p7._0.ctor === 'Mature')) {
+			var _p7 = fighter.status;
+			if (_p7.ctor === 'ReadyToAttack') {
+				var _p8 = _elm_lang$core$List$head(hydra.heads);
+				if ((_p8.ctor === 'Just') && (_p8._0.ctor === 'Mature')) {
 					return hydra.body;
 				} else {
 					return A2(_user$project$Main$attackBody, fighter, hydra);
@@ -11019,11 +11625,11 @@ var _user$project$Main$singleTargetDamage = F2(
 			}
 		}();
 		var heads = function () {
-			var _p8 = hydra.heads;
-			if (_p8.ctor === '::') {
-				var _p9 = fighter.status;
-				if (_p9.ctor === 'ReadyToAttack') {
-					return A4(_user$project$Main$attackHead, fighter, hydra, _p8._0, _p8._1);
+			var _p9 = hydra.heads;
+			if (_p9.ctor === '::') {
+				var _p10 = fighter.status;
+				if (_p10.ctor === 'ReadyToAttack') {
+					return A4(_user$project$Main$attackHead, fighter, hydra, _p9._0, _p9._1);
 				} else {
 					return hydra.heads;
 				}
@@ -11046,12 +11652,15 @@ var _user$project$Main$Villager = {ctor: 'Villager'};
 var _user$project$Main$ReadyToAttack = function (a) {
 	return {ctor: 'ReadyToAttack', _0: a};
 };
+var _user$project$Main$Reloading = function (a) {
+	return {ctor: 'Reloading', _0: a};
+};
 var _user$project$Main$initialFighters = {
 	ctor: '::',
 	_0: A3(
 		_user$project$Main$FighterGroup,
 		_user$project$Main$Villager,
-		_user$project$Main$ReadyToAttack(0),
+		_user$project$Main$Reloading(0),
 		1),
 	_1: {ctor: '[]'}
 };
@@ -11060,23 +11669,20 @@ var _user$project$Main$initialModel = {
 	fighters: _user$project$Main$initialFighters,
 	events: {ctor: '[]'}
 };
-var _user$project$Main$Reloading = function (a) {
-	return {ctor: 'Reloading', _0: a};
-};
-var _user$project$Main$applyDiffToStatus = F2(
+var _user$project$Main$applyDiffToFightStatus = F2(
 	function (sinceLastAttack, reloadTime) {
 		return (_elm_lang$core$Native_Utils.cmp(sinceLastAttack, reloadTime) < 0) ? _user$project$Main$Reloading(sinceLastAttack) : _user$project$Main$ReadyToAttack(sinceLastAttack - reloadTime);
 	});
 var _user$project$Main$attemptToAttack = F2(
 	function (diff, fighter) {
-		var _p10 = fighter.status;
-		if (_p10.ctor === 'Reloading') {
+		var _p11 = fighter.status;
+		if (_p11.ctor === 'Reloading') {
 			return _elm_lang$core$Native_Utils.update(
 				fighter,
 				{
 					status: A2(
-						_user$project$Main$applyDiffToStatus,
-						diff + _p10._0,
+						_user$project$Main$applyDiffToFightStatus,
+						diff + _p11._0,
 						_user$project$Main$reloadTimeFor(fighter))
 				});
 		} else {
@@ -11091,14 +11697,14 @@ var _user$project$Main$startAttacking = F2(
 			fighters);
 	});
 var _user$project$Main$reloadSingleFighter = function (fighter) {
-	var _p11 = fighter.status;
-	if (_p11.ctor === 'Reloading') {
+	var _p12 = fighter.status;
+	if (_p12.ctor === 'Reloading') {
 		return fighter;
 	} else {
 		return _elm_lang$core$Native_Utils.update(
 			fighter,
 			{
-				status: _user$project$Main$Reloading(_p11._0)
+				status: _user$project$Main$Reloading(_p12._0)
 			});
 	}
 };
@@ -11116,16 +11722,16 @@ var _user$project$Main$processAttacks = F2(
 	});
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p12 = msg;
-		if (_p12.ctor === 'Tick') {
-			var _p13 = _p12._0;
+		var _p13 = msg;
+		if (_p13.ctor === 'Tick') {
+			var _p14 = _p13._0;
 			return function (m) {
 				return {ctor: '_Tuple2', _0: m, _1: _elm_lang$core$Platform_Cmd$none};
 			}(
 				A2(
 					_user$project$Main$processRegens,
-					_p13,
-					A2(_user$project$Main$processAttacks, _p13, model)));
+					_p14,
+					A2(_user$project$Main$processAttacks, _p14, model)));
 		} else {
 			return function (m) {
 				return {ctor: '_Tuple2', _0: m, _1: _elm_lang$core$Platform_Cmd$none};

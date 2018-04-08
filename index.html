@@ -2,18 +2,18 @@
 <html>
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Main</title>
+
+    <link rel="stylesheet" <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 </head>
 
 <body>
     <div id="main"></div>
     <script src="main.js"></script>
     <script>
-        var node = document.getElementById('main');
-        var app = Elm.Main.embed(node);
-        // Note: if your Elm module is named "MyThing.Root" you
-        // would call "Elm.MyThing.Root.embed(node)" instead.
+        var app = Elm.Main.fullscreen()
     </script>
 </body>
 

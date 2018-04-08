@@ -4,9 +4,13 @@ import AnimationFrame
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Time exposing (Time)
-import Bootstrap.CDN as CDN
 import Bootstrap.Grid as Grid
 import Bootstrap.ListGroup as ListGroup
+import Bootstrap.Progress as Progress
+import Bootstrap.Grid.Row as Row
+import Bootstrap.Grid.Col as Col
+import FormatNumber exposing (format)
+import FormatNumber.Locales exposing (Locale, usLocale)
 
 
 main : Program Never Model Msg
@@ -47,7 +51,7 @@ type alias Hydra =
 
 type alias FighterGroup =
     { tier : Tier
-    , status : Status
+    , status : FightStatus
     , size : Int
     }
 
@@ -59,7 +63,7 @@ type Tier
     | Knight
 
 
-type Status
+type FightStatus
     = Reloading Time
     | ReadyToAttack Time
 
@@ -116,21 +120,20 @@ initialModel =
 
 initialFighters : List FighterGroup
 initialFighters =
-    [ FighterGroup Villager (ReadyToAttack 0) 1
+    [ FighterGroup Villager (Reloading 0) 1
     ]
 
 
 view : Model -> Html.Html a
 view model =
-    Grid.container []
-        [ CDN.stylesheet
-        , Grid.row []
-            [ Grid.col []
+    Grid.containerFluid []
+        [ Grid.row []
+            [ Grid.col [ Col.md4 ]
                 [ hydraView model.hydra
                 , fighterView model.fighters
                 ]
-            , Grid.col [] []
-            , Grid.col [] []
+            , Grid.col [ Col.md4 ] []
+            , Grid.col [ Col.md4 ] []
             ]
         ]
 
@@ -138,7 +141,7 @@ view model =
 hydraView : Hydra -> Html.Html a
 hydraView hydra =
     Html.div []
-        [ Html.h1 [] [ Html.text "Hydra" ]
+        [ Html.h2 [] [ Html.text "Hydra" ]
         , viewHydra hydra (List.head hydra.heads)
         ]
 
@@ -156,6 +159,13 @@ viewHydra hydra head =
             viewHydraBody hydra.body
 
 
+healthLocale : Locale
+healthLocale =
+    { usLocale
+        | decimals = 3
+    }
+
+
 viewHealth : Health -> Html.Html a
 viewHealth health =
     let
@@ -163,11 +173,11 @@ viewHealth health =
             toString (health.current / health.max * 100.0)
 
         progressLabel =
-            (toString health.current
+            (format healthLocale health.current
                 ++ "/"
-                ++ toString health.max
+                ++ format healthLocale health.max
                 ++ " (+"
-                ++ toString health.regen
+                ++ format healthLocale health.regen
                 ++ ")"
             )
     in
@@ -184,24 +194,24 @@ viewHydraBody body =
 
 viewHydraHead : Hydra -> Head -> Html.Html a
 viewHydraHead hydra head =
-    case head of
-        Regrowing _ ->
-            Html.p [] []
+    Html.p [] <|
+        case head of
+            Regrowing _ ->
+                []
 
-        Mature health ->
-            let
-                headCount =
-                    (List.length hydra.heads) - 1
+            Mature health ->
+                let
+                    headCount =
+                        (List.length hydra.heads) - 1
 
-                headString =
-                    if headCount > 1 then
-                        "The hydra has  " ++ toString headCount ++ " more heads."
-                    else if headCount == 1 then
-                        "The hydra has  " ++ toString headCount ++ " more head."
-                    else
-                        "There is only one head left!"
-            in
-                Html.p []
+                    headString =
+                        if headCount > 1 then
+                            "The hydra has  " ++ toString headCount ++ " more heads."
+                        else if headCount == 1 then
+                            "The hydra has  " ++ toString headCount ++ " more head."
+                        else
+                            "There is only one head left!"
+                in
                     [ Html.text "Current head:"
                     , viewHealth health
                     , Html.text headString
@@ -213,8 +223,7 @@ viewProgressBar percentage label color =
     Html.div
         [ class "progress"
         , style
-            [ ( "width", "100%" )
-            , ( "height", "30px" )
+            [ ( "height", "30px" )
             , ( "background-color", "#fff" )
             , ( "position", "relative" )
             , ( "border-width", "1px" )
@@ -263,7 +272,7 @@ viewFighterGroup group =
     ListGroup.li []
         [ Html.text <|
             toString group.tier
-                ++ " with a size of "
+                ++ " : "
                 ++ toString group.size
         ]
 
@@ -309,7 +318,37 @@ processAttacks diff model =
 
 processRegens : Time -> Model -> Model
 processRegens diff model =
-    model
+    { model | hydra = regenHydra diff model.hydra }
+
+
+regenHydra : Time -> Hydra -> Hydra
+regenHydra diff hydra =
+    let
+        newBody =
+            regenHealth diff hydra.body
+
+        headRegen =
+            regenHead diff
+
+        newHeads =
+            List.map headRegen hydra.heads
+    in
+        { hydra | body = newBody, heads = newHeads }
+
+
+regenHead : Time -> Head -> Head
+regenHead diff head =
+    case head of
+        Mature health ->
+            Mature (regenHealth diff health)
+
+        Regrowing _ ->
+            head
+
+
+regenHealth : Time -> Health -> Health
+regenHealth diff health =
+    { health | current = Basics.clamp 0 health.max (health.current + diff * health.regen / 1000.0) }
 
 
 startAttacking : Time -> List FighterGroup -> List FighterGroup
@@ -322,15 +361,15 @@ attemptToAttack diff fighter =
     case fighter.status of
         Reloading soFar ->
             { fighter
-                | status = applyDiffToStatus (diff + soFar) (reloadTimeFor fighter)
+                | status = applyDiffToFightStatus (diff + soFar) (reloadTimeFor fighter)
             }
 
         ReadyToAttack _ ->
             fighter
 
 
-applyDiffToStatus : Time -> Time -> Status
-applyDiffToStatus sinceLastAttack reloadTime =
+applyDiffToFightStatus : Time -> Time -> FightStatus
+applyDiffToFightStatus sinceLastAttack reloadTime =
     if sinceLastAttack < reloadTime then
         Reloading sinceLastAttack
     else
@@ -438,7 +477,7 @@ damageFor group =
         tierDamage =
             case group.tier of
                 Villager ->
-                    1.0
+                    1.5
 
                 Footman ->
                     2.0
