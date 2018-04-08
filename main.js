@@ -11122,46 +11122,6 @@ var _rundis$elm_bootstrap$Bootstrap_Progress$progressMulti = function (bars) {
 		A2(_elm_lang$core$List$map, _rundis$elm_bootstrap$Bootstrap_Progress$renderBar, bars));
 };
 
-var _user$project$Main$damageFor = function (group) {
-	var tierDamage = function () {
-		var _p0 = group.tier;
-		switch (_p0.ctor) {
-			case 'Villager':
-				return 1.5;
-			case 'Footman':
-				return 2.0;
-			case 'Archer':
-				return 1.0;
-			default:
-				return 3.0;
-		}
-	}();
-	return tierDamage * _elm_lang$core$Basics$toFloat(group.size);
-};
-var _user$project$Main$attackBody = F2(
-	function (group, hydra) {
-		var body = hydra.body;
-		var remainingHp = body.current - _user$project$Main$damageFor(group);
-		var newBody = _elm_lang$core$Native_Utils.update(
-			body,
-			{
-				current: A2(_elm_lang$core$Basics$max, 0.0, remainingHp)
-			});
-		return newBody;
-	});
-var _user$project$Main$reloadTimeFor = function (fighter) {
-	var _p1 = fighter.tier;
-	switch (_p1.ctor) {
-		case 'Villager':
-			return _elm_lang$core$Time$millisecond * 1000;
-		case 'Footman':
-			return _elm_lang$core$Time$millisecond * 2000;
-		case 'Archer':
-			return _elm_lang$core$Time$millisecond * 1500;
-		default:
-			return _elm_lang$core$Time$millisecond * 2000;
-	}
-};
 var _user$project$Main$regenHealth = F2(
 	function (diff, health) {
 		return _elm_lang$core$Native_Utils.update(
@@ -11329,7 +11289,14 @@ var _user$project$Main$viewProgressBar = F3(
 							},
 							{
 								ctor: '::',
-								_0: _elm_lang$html$Html$text(label),
+								_0: A2(
+									_elm_lang$html$Html$b,
+									{ctor: '[]'},
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html$text(label),
+										_1: {ctor: '[]'}
+									}),
 								_1: {ctor: '[]'}
 							}),
 						_1: {ctor: '[]'}
@@ -11339,7 +11306,7 @@ var _user$project$Main$viewProgressBar = F3(
 	});
 var _user$project$Main$healthLocale = _elm_lang$core$Native_Utils.update(
 	_cuducos$elm_format_number$FormatNumber_Locales$usLocale,
-	{decimals: 3});
+	{decimals: 1});
 var _user$project$Main$viewHealth = function (health) {
 	var progressLabel = A2(
 		_elm_lang$core$Basics_ops['++'],
@@ -11366,7 +11333,14 @@ var _user$project$Main$viewHydraBody = function (body) {
 		{ctor: '[]'},
 		{
 			ctor: '::',
-			_0: _elm_lang$html$Html$text('Body:'),
+			_0: A2(
+				_elm_lang$html$Html$h4,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text('Body:'),
+					_1: {ctor: '[]'}
+				}),
 			_1: {
 				ctor: '::',
 				_0: _user$project$Main$viewHealth(body),
@@ -11374,60 +11348,158 @@ var _user$project$Main$viewHydraBody = function (body) {
 			}
 		});
 };
+var _user$project$Main$isheadRegrowing = function (head) {
+	var _p0 = head;
+	if (_p0.ctor === 'Mature') {
+		return false;
+	} else {
+		return true;
+	}
+};
+var _user$project$Main$isheadMature = function (head) {
+	return !_user$project$Main$isheadRegrowing(head);
+};
 var _user$project$Main$viewHydraHead = F2(
 	function (hydra, head) {
 		return A2(
 			_elm_lang$html$Html$p,
 			{ctor: '[]'},
 			function () {
-				var _p2 = head;
-				if (_p2.ctor === 'Regrowing') {
-					return {ctor: '[]'};
+				var regrowingHeadCount = _elm_lang$core$List$length(
+					A2(_elm_lang$core$List$filter, _user$project$Main$isheadRegrowing, hydra.heads));
+				var regrowingHeadString = A2(
+					_elm_lang$core$Basics_ops['++'],
+					' from which ',
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						_elm_lang$core$Basics$toString(regrowingHeadCount),
+						' heads are regrowing.'));
+				var matureHeadCount = _elm_lang$core$List$length(hydra.heads);
+				var totalHeadString = A2(
+					_elm_lang$core$Basics_ops['++'],
+					'The hydra has a total of ',
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						_elm_lang$core$Basics$toString(matureHeadCount),
+						' heads,'));
+				var _p1 = head;
+				if (_p1.ctor === 'Regrowing') {
+					return {
+						ctor: '::',
+						_0: _elm_lang$html$Html$text(totalHeadString),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$div,
+								{ctor: '[]'},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text(regrowingHeadString),
+									_1: {ctor: '[]'}
+								}),
+							_1: {ctor: '[]'}
+						}
+					};
 				} else {
-					var headCount = _elm_lang$core$List$length(hydra.heads) - 1;
-					var headString = (_elm_lang$core$Native_Utils.cmp(headCount, 1) > 0) ? A2(
-						_elm_lang$core$Basics_ops['++'],
-						'The hydra has  ',
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							_elm_lang$core$Basics$toString(headCount),
-							' more heads.')) : (_elm_lang$core$Native_Utils.eq(headCount, 1) ? A2(
-						_elm_lang$core$Basics_ops['++'],
-						'The hydra has  ',
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							_elm_lang$core$Basics$toString(headCount),
-							' more head.')) : 'There is only one head left!');
 					return {
 						ctor: '::',
 						_0: _elm_lang$html$Html$text('Current head:'),
 						_1: {
 							ctor: '::',
-							_0: _user$project$Main$viewHealth(_p2._0),
+							_0: _user$project$Main$viewHealth(_p1._0),
 							_1: {
 								ctor: '::',
-								_0: _elm_lang$html$Html$text(headString),
-								_1: {ctor: '[]'}
+								_0: _elm_lang$html$Html$text(totalHeadString),
+								_1: {
+									ctor: '::',
+									_0: A2(
+										_elm_lang$html$Html$div,
+										{ctor: '[]'},
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html$text(regrowingHeadString),
+											_1: {ctor: '[]'}
+										}),
+									_1: {ctor: '[]'}
+								}
 							}
 						}
 					};
 				}
 			}());
 	});
+var _user$project$Main$regrowTime = function (hydra) {
+	return _elm_lang$core$Time$millisecond * (8000 + (2000 * _elm_lang$core$Basics$toFloat(hydra.level)));
+};
+var _user$project$Main$viewRegrowingHead = F2(
+	function (hydra, head) {
+		return A2(
+			_elm_lang$html$Html$div,
+			{ctor: '[]'},
+			function () {
+				var _p2 = head;
+				if (_p2.ctor === 'Mature') {
+					return {ctor: '[]'};
+				} else {
+					var progressPercentage = (_p2._0 / _user$project$Main$regrowTime(hydra)) * 100;
+					var progressLabel = A2(
+						_elm_lang$core$Basics_ops['++'],
+						A2(_cuducos$elm_format_number$FormatNumber$format, _user$project$Main$healthLocale, progressPercentage),
+						'%');
+					return {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$h4,
+							{ctor: '[]'},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text('Most regrown head:'),
+								_1: {ctor: '[]'}
+							}),
+						_1: {
+							ctor: '::',
+							_0: A3(
+								_user$project$Main$viewProgressBar,
+								_elm_lang$core$Basics$toString(progressPercentage),
+								progressLabel,
+								'#a030f0'),
+							_1: {ctor: '[]'}
+						}
+					};
+				}
+			}());
+	});
+var _user$project$Main$viewHydraRegrowingHead = function (hydra) {
+	var regrowingHeads = A2(_elm_lang$core$List$filter, _user$project$Main$isheadRegrowing, hydra.heads);
+	var firstRegrowingHead = _elm_lang$core$List$head(regrowingHeads);
+	var _p3 = firstRegrowingHead;
+	if (_p3.ctor === 'Just') {
+		return A2(_user$project$Main$viewRegrowingHead, hydra, _p3._0);
+	} else {
+		return A2(
+			_elm_lang$html$Html$div,
+			{ctor: '[]'},
+			{ctor: '[]'});
+	}
+};
 var _user$project$Main$viewHydra = F2(
 	function (hydra, head) {
-		var _p3 = head;
-		if (_p3.ctor === 'Just') {
+		var _p4 = head;
+		if (_p4.ctor === 'Just') {
 			return A2(
 				_elm_lang$html$Html$div,
 				{ctor: '[]'},
 				{
 					ctor: '::',
-					_0: A2(_user$project$Main$viewHydraHead, hydra, _p3._0),
+					_0: A2(_user$project$Main$viewHydraHead, hydra, _p4._0),
 					_1: {
 						ctor: '::',
-						_0: _user$project$Main$viewHydraBody(hydra.body),
-						_1: {ctor: '[]'}
+						_0: _user$project$Main$viewHydraRegrowingHead(hydra),
+						_1: {
+							ctor: '::',
+							_0: _user$project$Main$viewHydraBody(hydra.body),
+							_1: {ctor: '[]'}
+						}
 					}
 				});
 		} else {
@@ -11512,6 +11584,46 @@ var _user$project$Main$view = function (model) {
 			_1: {ctor: '[]'}
 		});
 };
+var _user$project$Main$reloadTimeFor = function (fighter) {
+	var _p5 = fighter.tier;
+	switch (_p5.ctor) {
+		case 'Villager':
+			return _elm_lang$core$Time$millisecond * 500;
+		case 'Footman':
+			return _elm_lang$core$Time$millisecond * 2000;
+		case 'Archer':
+			return _elm_lang$core$Time$millisecond * 1500;
+		default:
+			return _elm_lang$core$Time$millisecond * 2000;
+	}
+};
+var _user$project$Main$damageFor = function (group) {
+	var tierDamage = function () {
+		var _p6 = group.tier;
+		switch (_p6.ctor) {
+			case 'Villager':
+				return 3.5;
+			case 'Footman':
+				return 2.0;
+			case 'Archer':
+				return 1.0;
+			default:
+				return 3.0;
+		}
+	}();
+	return tierDamage * _elm_lang$core$Basics$toFloat(group.size);
+};
+var _user$project$Main$attackBody = F2(
+	function (group, hydra) {
+		var body = hydra.body;
+		var remainingHp = body.current - _user$project$Main$damageFor(group);
+		var newBody = _elm_lang$core$Native_Utils.update(
+			body,
+			{
+				current: A2(_elm_lang$core$Basics$max, 0.0, remainingHp)
+			});
+		return newBody;
+	});
 var _user$project$Main$Model = F3(
 	function (a, b, c) {
 		return {hydra: a, fighters: b, events: c};
@@ -11520,6 +11632,16 @@ var _user$project$Main$Health = F3(
 	function (a, b, c) {
 		return {current: a, max: b, regen: c};
 	});
+var _user$project$Main$generateHealth = F2(
+	function (hp, regen) {
+		return A3(_user$project$Main$Health, hp, hp, regen);
+	});
+var _user$project$Main$generateBody = function (level) {
+	var floatLevel = _elm_lang$core$Basics$toFloat(level);
+	var hp = floatLevel * 100;
+	var regen = floatLevel * 3;
+	return A2(_user$project$Main$generateHealth, hp, regen);
+};
 var _user$project$Main$Hydra = F3(
 	function (a, b, c) {
 		return {heads: a, body: b, level: c};
@@ -11535,26 +11657,27 @@ var _user$project$Main$Event = F2(
 var _user$project$Main$Mature = function (a) {
 	return {ctor: 'Mature', _0: a};
 };
-var _user$project$Main$generateHydra = function (level) {
-	var headCount = Math.pow(level, 3) + 1;
+var _user$project$Main$generateHead = function (level) {
 	var floatLevel = _elm_lang$core$Basics$toFloat(level);
-	var headHp = floatLevel * 10;
-	var headRegen = floatLevel * 1;
-	var head = _user$project$Main$Mature(
-		A3(_user$project$Main$Health, headHp, headHp, headRegen));
+	var hp = floatLevel * 10;
+	var regen = floatLevel * 1;
+	return _user$project$Main$Mature(
+		A2(_user$project$Main$generateHealth, hp, regen));
+};
+var _user$project$Main$generateHydra = function (level) {
+	var body = _user$project$Main$generateBody(level);
+	var head = _user$project$Main$generateHead(level);
+	var headCount = Math.pow(level, 3) + 1;
 	var heads = A2(_elm_lang$core$List$repeat, headCount, head);
-	var bodyHp = floatLevel * 100;
-	var bodyRegen = floatLevel * 3;
-	var body = A3(_user$project$Main$Health, bodyHp, bodyHp, bodyRegen);
 	var hydra = A3(_user$project$Main$Hydra, heads, body, level);
 	return hydra;
 };
 var _user$project$Main$regenHead = F2(
 	function (diff, head) {
-		var _p4 = head;
-		if (_p4.ctor === 'Mature') {
+		var _p7 = head;
+		if (_p7.ctor === 'Mature') {
 			return _user$project$Main$Mature(
-				A2(_user$project$Main$regenHealth, diff, _p4._0));
+				A2(_user$project$Main$regenHealth, diff, _p7._0));
 		} else {
 			return head;
 		}
@@ -11579,30 +11702,58 @@ var _user$project$Main$processRegens = F2(
 var _user$project$Main$Regrowing = function (a) {
 	return {ctor: 'Regrowing', _0: a};
 };
+var _user$project$Main$regrowHead = F3(
+	function (diff, hydra, head) {
+		var _p8 = head;
+		if (_p8.ctor === 'Mature') {
+			return head;
+		} else {
+			var _p9 = _p8._0;
+			return (_elm_lang$core$Native_Utils.cmp(
+				_p9,
+				_user$project$Main$regrowTime(hydra)) > -1) ? _user$project$Main$generateHead(hydra.level) : _user$project$Main$Regrowing(_p9 + diff);
+		}
+	});
+var _user$project$Main$regrowHydra = F2(
+	function (diff, hydra) {
+		var headRegrow = A2(_user$project$Main$regrowHead, diff, hydra);
+		var newHeads = A2(_elm_lang$core$List$map, headRegrow, hydra.heads);
+		return _elm_lang$core$Native_Utils.update(
+			hydra,
+			{heads: newHeads});
+	});
+var _user$project$Main$processRegrows = F2(
+	function (diff, model) {
+		return _elm_lang$core$Native_Utils.update(
+			model,
+			{
+				hydra: A2(_user$project$Main$regrowHydra, diff, model.hydra)
+			});
+	});
 var _user$project$Main$newHead = function (hydra) {
 	return A2(
 		_elm_lang$core$List$repeat,
 		_elm_lang$core$Basics$floor(
-			_elm_lang$core$Basics$toFloat(hydra.level) * 0.5) + 1,
+			_elm_lang$core$Basics$toFloat(hydra.level) * 1.5) + 2,
 		_user$project$Main$Regrowing(0));
 };
 var _user$project$Main$attackHead = F4(
 	function (fighter, hydra, head, rest) {
-		var _p5 = head;
-		if (_p5.ctor === 'Regrowing') {
+		var _p10 = head;
+		if (_p10.ctor === 'Regrowing') {
 			return {ctor: '::', _0: head, _1: rest};
 		} else {
-			var _p6 = _p5._0;
-			var remainingHp = _p6.current - _user$project$Main$damageFor(fighter);
+			var _p11 = _p10._0;
+			var remainingHp = _p11.current - _user$project$Main$damageFor(fighter);
 			var newHealth = _elm_lang$core$Native_Utils.update(
-				_p6,
+				_p11,
 				{
 					current: A2(_elm_lang$core$Basics$max, 0.0, remainingHp)
 				});
 			return (_elm_lang$core$Native_Utils.cmp(remainingHp, 0) < 1) ? A2(
 				_elm_lang$core$Basics_ops['++'],
-				_user$project$Main$newHead(hydra),
-				rest) : {
+				rest,
+				_user$project$Main$newHead(hydra)) : {
 				ctor: '::',
 				_0: _user$project$Main$Mature(newHealth),
 				_1: rest
@@ -11612,10 +11763,10 @@ var _user$project$Main$attackHead = F4(
 var _user$project$Main$singleTargetDamage = F2(
 	function (fighter, hydra) {
 		var body = function () {
-			var _p7 = fighter.status;
-			if (_p7.ctor === 'ReadyToAttack') {
-				var _p8 = _elm_lang$core$List$head(hydra.heads);
-				if ((_p8.ctor === 'Just') && (_p8._0.ctor === 'Mature')) {
+			var _p12 = fighter.status;
+			if (_p12.ctor === 'ReadyToAttack') {
+				var _p13 = _elm_lang$core$List$head(hydra.heads);
+				if ((_p13.ctor === 'Just') && (_p13._0.ctor === 'Mature')) {
 					return hydra.body;
 				} else {
 					return A2(_user$project$Main$attackBody, fighter, hydra);
@@ -11625,11 +11776,11 @@ var _user$project$Main$singleTargetDamage = F2(
 			}
 		}();
 		var heads = function () {
-			var _p9 = hydra.heads;
-			if (_p9.ctor === '::') {
-				var _p10 = fighter.status;
-				if (_p10.ctor === 'ReadyToAttack') {
-					return A4(_user$project$Main$attackHead, fighter, hydra, _p9._0, _p9._1);
+			var _p14 = hydra.heads;
+			if (_p14.ctor === '::') {
+				var _p15 = fighter.status;
+				if (_p15.ctor === 'ReadyToAttack') {
+					return A4(_user$project$Main$attackHead, fighter, hydra, _p14._0, _p14._1);
 				} else {
 					return hydra.heads;
 				}
@@ -11675,14 +11826,14 @@ var _user$project$Main$applyDiffToFightStatus = F2(
 	});
 var _user$project$Main$attemptToAttack = F2(
 	function (diff, fighter) {
-		var _p11 = fighter.status;
-		if (_p11.ctor === 'Reloading') {
+		var _p16 = fighter.status;
+		if (_p16.ctor === 'Reloading') {
 			return _elm_lang$core$Native_Utils.update(
 				fighter,
 				{
 					status: A2(
 						_user$project$Main$applyDiffToFightStatus,
-						diff + _p11._0,
+						diff + _p16._0,
 						_user$project$Main$reloadTimeFor(fighter))
 				});
 		} else {
@@ -11697,14 +11848,14 @@ var _user$project$Main$startAttacking = F2(
 			fighters);
 	});
 var _user$project$Main$reloadSingleFighter = function (fighter) {
-	var _p12 = fighter.status;
-	if (_p12.ctor === 'Reloading') {
+	var _p17 = fighter.status;
+	if (_p17.ctor === 'Reloading') {
 		return fighter;
 	} else {
 		return _elm_lang$core$Native_Utils.update(
 			fighter,
 			{
-				status: _user$project$Main$Reloading(_p12._0)
+				status: _user$project$Main$Reloading(_p17._0)
 			});
 	}
 };
@@ -11722,24 +11873,20 @@ var _user$project$Main$processAttacks = F2(
 	});
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p13 = msg;
-		if (_p13.ctor === 'Tick') {
-			var _p14 = _p13._0;
-			return function (m) {
-				return {ctor: '_Tuple2', _0: m, _1: _elm_lang$core$Platform_Cmd$none};
-			}(
+		var _p18 = msg;
+		var _p19 = _p18._0;
+		var newDiff = (_elm_lang$core$Native_Utils.cmp(_p19, 16) > 0) ? 16 : _p19;
+		return function (m) {
+			return {ctor: '_Tuple2', _0: m, _1: _elm_lang$core$Platform_Cmd$none};
+		}(
+			A2(
+				_user$project$Main$processRegrows,
+				newDiff,
 				A2(
 					_user$project$Main$processRegens,
-					_p14,
-					A2(_user$project$Main$processAttacks, _p14, model)));
-		} else {
-			return function (m) {
-				return {ctor: '_Tuple2', _0: m, _1: _elm_lang$core$Platform_Cmd$none};
-			}(model);
-		}
+					newDiff,
+					A2(_user$project$Main$processAttacks, newDiff, model))));
 	});
-var _user$project$Main$Sell = {ctor: 'Sell'};
-var _user$project$Main$Buy = {ctor: 'Buy'};
 var _user$project$Main$Tick = function (a) {
 	return {ctor: 'Tick', _0: a};
 };

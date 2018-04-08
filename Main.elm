@@ -77,37 +77,118 @@ type alias Event =
 generateHydra : Int -> Hydra
 generateHydra level =
     let
-        floatLevel =
-            toFloat level
-
-        headHp =
-            floatLevel * 10
-
-        headRegen =
-            floatLevel * 1
-
-        bodyHp =
-            floatLevel * 100
-
-        bodyRegen =
-            floatLevel * 3
-
         headCount =
             level ^ 3 + 1
 
         head =
-            Mature (Health headHp headHp headRegen)
+            generateHead level
 
         heads =
             List.repeat headCount head
 
         body =
-            Health bodyHp bodyHp bodyRegen
+            generateBody level
 
         hydra =
             Hydra heads body level
     in
         hydra
+
+
+generateHead : Int -> Head
+generateHead level =
+    let
+        floatLevel =
+            toFloat level
+
+        hp =
+            floatLevel * 10
+
+        regen =
+            floatLevel * 1
+    in
+        Mature (generateHealth hp regen)
+
+
+generateBody : Int -> Health
+generateBody level =
+    let
+        floatLevel =
+            toFloat level
+
+        hp =
+            floatLevel * 100
+
+        regen =
+            floatLevel * 3
+    in
+        generateHealth hp regen
+
+
+damageFor : FighterGroup -> Float
+damageFor group =
+    let
+        tierDamage =
+            case group.tier of
+                Villager ->
+                    3.5
+
+                Footman ->
+                    2.0
+
+                Archer ->
+                    1.0
+
+                Knight ->
+                    3.0
+    in
+        tierDamage * (toFloat group.size)
+
+
+reloadTimeFor : FighterGroup -> Time
+reloadTimeFor fighter =
+    case fighter.tier of
+        Villager ->
+            Time.millisecond * 500
+
+        Footman ->
+            Time.millisecond * 2000
+
+        Archer ->
+            Time.millisecond * 1500
+
+        Knight ->
+            Time.millisecond * 2000
+
+
+regrowTime : Hydra -> Time
+regrowTime hydra =
+    Time.millisecond * (8000 + 2000 * toFloat hydra.level)
+
+
+regrowHead : Time -> Hydra -> Head -> Head
+regrowHead diff hydra head =
+    case head of
+        Mature _ ->
+            head
+
+        Regrowing elapsedTime ->
+            if elapsedTime >= (regrowTime hydra) then
+                generateHead hydra.level
+            else
+                Regrowing (elapsedTime + diff)
+
+
+newHead : Hydra -> List Head
+newHead hydra =
+    List.repeat
+        (floor (toFloat hydra.level * 1.5) + 2)
+        (Regrowing 0)
+
+
+generateHealth : Float -> Float -> Health
+generateHealth hp regen =
+    (Health hp hp regen)
 
 
 initialModel : Model
@@ -152,6 +233,7 @@ viewHydra hydra head =
         Just head ->
             Html.div []
                 [ viewHydraHead hydra head
+                , viewHydraRegrowingHead hydra
                 , viewHydraBody hydra.body
                 ]
 
@@ -159,10 +241,62 @@ viewHydra hydra head =
             viewHydraBody hydra.body
 
 
+viewHydraRegrowingHead : Hydra -> Html a
+viewHydraRegrowingHead hydra =
+    let
+        regrowingHeads =
+            List.filter isheadRegrowing hydra.heads
+
+        firstRegrowingHead =
+            List.head regrowingHeads
+    in
+        case firstRegrowingHead of
+            Just firstRegrowingHead ->
+                viewRegrowingHead hydra firstRegrowingHead
+
+            Nothing ->
+                div [] []
+
+
+viewRegrowingHead : Hydra -> Head -> Html a
+viewRegrowingHead hydra head =
+    div [] <|
+        case head of
+            Mature _ ->
+                []
+
+            Regrowing elapsedTime ->
+                let
+                    progressPercentage =
+                        (elapsedTime / (regrowTime hydra) * 100)
+
+                    progressLabel =
+                        (format healthLocale progressPercentage) ++ "%"
+                in
+                    [ h4 [] [ text "Most regrown head:" ]
+                    , viewProgressBar (toString progressPercentage) progressLabel "#a030f0"
+                    ]
+
+
+isheadRegrowing : Head -> Bool
+isheadRegrowing head =
+    case head of
+        Mature _ ->
+            False
+
+        Regrowing _ ->
+            True
+
+
+isheadMature : Head -> Bool
+isheadMature head =
+    not (isheadRegrowing head)
+
+
 healthLocale : Locale
 healthLocale =
     { usLocale
-        | decimals = 3
+        | decimals = 1
     }
 
 
@@ -187,7 +321,7 @@ viewHealth health =
 viewHydraBody : Health -> Html.Html a
 viewHydraBody body =
     Html.p []
-        [ Html.text "Body:"
+        [ Html.h4 [] [ text "Body:" ]
         , viewHealth body
         ]
 
@@ -195,26 +329,30 @@ viewHydraBody body =
 viewHydraHead : Hydra -> Head -> Html.Html a
 viewHydraHead hydra head =
     Html.p [] <|
-        case head of
-            Regrowing _ ->
-                []
+        let
+            matureHeadCount =
+                List.length hydra.heads
 
-            Mature health ->
-                let
-                    headCount =
-                        (List.length hydra.heads) - 1
+            regrowingHeadCount =
+                List.length (List.filter isheadRegrowing hydra.heads)
 
-                    headString =
-                        if headCount > 1 then
-                            "The hydra has  " ++ toString headCount ++ " more heads."
-                        else if headCount == 1 then
-                            "The hydra has  " ++ toString headCount ++ " more head."
-                        else
-                            "There is only one head left!"
-                in
+            totalHeadString =
+                "The hydra has a total of " ++ toString matureHeadCount ++ " heads,"
+
+            regrowingHeadString =
+                " from which " ++ toString regrowingHeadCount ++ " heads are regrowing."
+        in
+            case head of
+                Regrowing _ ->
+                    [ Html.text totalHeadString
+                    , div [] [ Html.text regrowingHeadString ]
+                    ]
+
+                Mature health ->
                     [ Html.text "Current head:"
                     , viewHealth health
-                    , Html.text headString
+                    , Html.text totalHeadString
+                    , div [] [ Html.text regrowingHeadString ]
                     ]
 
 
@@ -253,7 +391,7 @@ viewProgressBar percentage label color =
                     , ( "width", "100%" )
                     ]
                 ]
-                [ Html.text label
+                [ Html.b [] [ text label ]
                 ]
             ]
         ]
@@ -279,22 +417,32 @@ viewFighterGroup group =
 
 type Msg
     = Tick Time
-    | Buy {- todo -}
-    | Sell
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick diff ->
-            model
-                |> processAttacks diff
-                |> processRegens diff
-                |> \m -> ( m, Cmd.none )
+            let
+                newDiff =
+                    -- discard long diffs
+                    if diff > 16 then
+                        16
+                    else
+                        diff
+            in
+                model
+                    |> processAttacks newDiff
+                    |> processRegens newDiff
+                    |> processRegrows newDiff
+                    |> \m -> ( m, Cmd.none )
 
-        _ ->
-            model
-                |> \m -> ( m, Cmd.none )
+
+
+{- _ ->
+   model
+       |> \m -> ( m, Cmd.none )
+-}
 
 
 processAttacks : Time -> Model -> Model
@@ -351,6 +499,23 @@ regenHealth diff health =
     { health | current = Basics.clamp 0 health.max (health.current + diff * health.regen / 1000.0) }
 
 
+processRegrows : Time -> Model -> Model
+processRegrows diff model =
+    { model | hydra = regrowHydra diff model.hydra }
+
+
+regrowHydra : Time -> Hydra -> Hydra
+regrowHydra diff hydra =
+    let
+        headRegrow =
+            regrowHead diff hydra
+
+        newHeads =
+            List.map headRegrow hydra.heads
+    in
+        { hydra | heads = newHeads }
+
+
 startAttacking : Time -> List FighterGroup -> List FighterGroup
 startAttacking diff fighters =
     List.map (attemptToAttack diff) fighters
@@ -374,22 +539,6 @@ applyDiffToFightStatus sinceLastAttack reloadTime =
         Reloading sinceLastAttack
     else
         ReadyToAttack (sinceLastAttack - reloadTime)
-
-
-reloadTimeFor : FighterGroup -> Time
-reloadTimeFor fighter =
-    case fighter.tier of
-        Villager ->
-            Time.millisecond * 1000
-
-        Footman ->
-            Time.millisecond * 2000
-
-        Archer ->
-            Time.millisecond * 1500
-
-        Knight ->
-            Time.millisecond * 2000
 
 
 takeDamageFrom : List FighterGroup -> Hydra -> Hydra
@@ -459,36 +608,10 @@ attackHead fighter hydra head rest =
                     { health | current = Basics.max 0.0 remainingHp }
             in
                 if remainingHp <= 0 then
-                    (newHead hydra) ++ rest
+                    -- move it to the end so only alive heads are at the front
+                    rest ++ (newHead hydra)
                 else
                     (Mature newHealth) :: rest
-
-
-newHead : Hydra -> List Head
-newHead hydra =
-    List.repeat
-        (floor (toFloat hydra.level * 0.5) + 1)
-        (Regrowing 0)
-
-
-damageFor : FighterGroup -> Float
-damageFor group =
-    let
-        tierDamage =
-            case group.tier of
-                Villager ->
-                    1.5
-
-                Footman ->
-                    2.0
-
-                Archer ->
-                    1.0
-
-                Knight ->
-                    3.0
-    in
-        tierDamage * (toFloat group.size)
 
 
 startReloading : List FighterGroup -> List FighterGroup
@@ -520,15 +643,14 @@ subscriptions model =
 
 {- TODO
    Credits:
-        - elm-slack, https://elmlang.slack.com/messages/C192T0Q1E/
-        - joelq, https://twitter.com/joelquen, https://robots.thoughtbot.com/authors/joel-quenneville
+       - elm-slack, https://elmlang.slack.com/messages/C192T0Q1E/
+       - joelq, https://twitter.com/joelquen, https://robots.thoughtbot.com/authors/joel-quenneville
 
-    Regeneration
-    Regrowing of heads
-    Reward for kills
-    New hydra when killed
+   Regrowing of heads
+   Reward for kills
+   New hydra when killed
 
-    Some buttons to actually play the game
+   Some buttons to actually play the game
 
    About section
    Donation section
